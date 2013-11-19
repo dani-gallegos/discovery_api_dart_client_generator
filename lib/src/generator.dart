@@ -233,6 +233,7 @@ library $_libraryName;
 import "dart:core" as core;
 import "dart:async" as async;
 import "dart:json" as JSON;
+import "package:intl/intl.dart" as intl;
 
 part "$srcFolder/common/client.dart";
 part "$srcFolder/common/schemas.dart";
@@ -500,9 +501,10 @@ part "$srcFolder/console/$_name.dart";
             }
             break;
           case "string":
-            type = "core.String";
-            if (schemaFormat == "int64") {
-              type = "core.int";
+            switch(schemaFormat){
+              case "int64": type = "core.int"; break;
+              case "date-time": type = "core.DateTime"; break;
+              default: type = "core.String";
             }
             break;
           case "number": type = "core.num"; break;
@@ -557,9 +559,10 @@ part "$srcFolder/console/$_name.dart";
             object = true;
             break;
           case "string":
-            type = "core.String";
-            if (schemaFormat == "int64") {
-              type = "core.int";
+            switch(schemaFormat){
+              case "int64": type = "core.int"; break;
+              case "date-time": type = "core.DateTime"; break;
+              default: type = "core.String";
             }
             break;
           case "number": type = "core.num"; break;
@@ -590,13 +593,26 @@ part "$srcFolder/console/$_name.dart";
           } else {
             if (object) {
               tmp.write("      $propName = new $type.fromJson(json[\"$jsonName\"]);\n");
-            } else {              
-              if(schemaType=="string" && schemaFormat == "int64") {
-                tmp.write("      if(json[\"$jsonName\"] is core.String){\n");
-                tmp.write("        $propName = core.int.parse(json[\"$jsonName\"]);\n");
-                tmp.write("      }else{\n");
-                tmp.write("        $propName = json[\"$jsonName\"];\n");
-                tmp.write("      }\n");
+            } else {      
+              if(schemaType=="string") {
+                switch(schemaFormat){
+                  case "int64":
+                    tmp.write("      if(json[\"$jsonName\"] is core.String){\n");
+                    tmp.write("        $propName = core.int.parse(json[\"$jsonName\"]);\n");
+                    tmp.write("      }else{\n");
+                    tmp.write("        $propName = json[\"$jsonName\"];\n");
+                    tmp.write("      }\n");                    
+                    break;
+                  case "date-time":
+                    tmp.write("      if(json[\"$jsonName\"] is core.String){\n");
+                    tmp.write("        $propName = core.DateTime.parse(json[\"$jsonName\"]);\n");
+                    tmp.write("      }else{\n");
+                    tmp.write("        $propName = json[\"$jsonName\"];\n");
+                    tmp.write("      }\n");                    
+                    break;
+                  default:
+                    tmp.write("      $propName = json[\"$jsonName\"];\n");
+                }
               }else{            
                 tmp.write("      $propName = json[\"$jsonName\"];\n");
               }   
@@ -634,10 +650,11 @@ part "$srcFolder/console/$_name.dart";
             type = "${capitalize(name)}${capitalize(key)}";
             object = true;
             break;
-          case "string":
-            type = "core.String";
-            if (schemaFormat == "int64") {
-              type = "core.int";
+          case "string":            
+            switch(schemaFormat){
+              case "int64": type = "core.int"; break;
+              case "date-time": type = "core.DateTime"; break;
+              default: type = "core.String"; 
             }
             break;
           case "number": type = "core.num"; break;
@@ -668,8 +685,18 @@ part "$srcFolder/console/$_name.dart";
           } else {
             if (object) {
               tmp.write("      output[\"$jsonName\"] = $propName.toJson();\n");
-            } else {
-              tmp.write("      output[\"$jsonName\"] = $propName;\n");
+            } else {      
+              if(schemaType=="string") {
+                switch(schemaFormat){
+                  case "date-time": 
+                    tmp.write("      output[\"$jsonName\"] = new intl.DateFormat(\"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'\").format($propName);\n"); 
+                    break;              
+                  default: 
+                    tmp.write("      output[\"$jsonName\"] = $propName;\n");
+                }
+              } else {
+                tmp.write("      output[\"$jsonName\"] = $propName;\n");
+              }
             }
           }
           tmp.write("    }\n");
