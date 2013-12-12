@@ -11,11 +11,10 @@ Examples for how to use the generated client libraries can be found here: https:
 ### Usage
 
 ```
-   generate.dart -a <API> - v <Version> [-o <Directory>] (to load from Google Discovery API)
-or generate.dart -u <URL> [-o <Directory>] (to load discovery document from specified URL)
-or generate.dart -i <File> [-o <Directory>] (to load discovery document from local file)
-or generate.dart --all [-o <Directory>] (to create libraries for all Google APIs)
-or generate.dart --full [-o <Directory>] (to create one library including all Google APIs)
+   generate.dart -a <API> -v <Version> -o <Directory> (to load from Google Discovery API)
+or generate.dart -u <URL> -o <Directory> (to load discovery document from specified URL)
+or generate.dart -i <File> -o <Directory> (to load discovery document from local file)
+or generate.dart --all -o <Directory> (to create libraries for all Google APIs)
 
 -a, --api          Short name of the Google API (plus, drive, ...)
 -v, --version      Google API version (v1, v2, v1alpha, ...)
@@ -23,8 +22,7 @@ or generate.dart --full [-o <Directory>] (to create one library including all Go
 -u, --url          URL of a Discovery document
 -p, --prefix       Prefix for library name (defaults to "google")
     --all          Create client libraries for all Google APIs
-    --full         Create one library including all Google APIs
--o, --output       Output Directory (defaults to "output/")
+-o, --output       Output Directory
 
     --date         Create sub folder with current date (otherwise files might be overwritten)
     --check        Check for changes against existing version if available
@@ -32,6 +30,39 @@ or generate.dart --full [-o <Directory>] (to create one library including all Go
 
 -h, --help         Display this information and exit
 ```
+
+
+## Clone dart-gde/discovery_api_dart_client_generator
+
+```
+git clone https://github.com/dart-gde/discovery_api_dart_client_generator
+cd discovery_api_dart_client_generator
+pub install
+```
+
+## Generate your client library
+
+```
+URL='https://my-app-id.appspot.com/_ah/api/discovery/v1/apis/greeting/v1/rest'
+curl -s -o greetings.rpc.discovery $URL
+bin/generate.dart --no-prefix -i greetings.rpc.discovery -o ../
+```
+
+**N.B.** At present, you can't map your endpoint URL to a custom domain. Bossylobster 
+[wrote](http://stackoverflow.com/a/16124815/1745000): "It's a non-trivial networking problem
+and something Google certainly plan on supporting in the future. Keep in mind, Cloud Endpoints 
+is a combination or App Engine and Google's API Infrastructure."
+
+Now you just have to add your endpoints client library to your dart application (assuming it is in the parent directory.)
+
+```
+cd ../my-app_dart/
+cat >>pubspec.yaml <<EOF
+  my-app-id_v1_api:
+  path: ../dart_my-app-id_v1_api_client
+EOF
+```
+
 
 ### Licenses
 
